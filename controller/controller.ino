@@ -33,8 +33,8 @@
 #define BUFFER_SIZE 64                    //buffer size for serial, kinda arbitrary...
 #define MESSAGE_SIZE 6                    //number of chars in a total message
 #define PAYLOAD_SIZE 5                    //size of the message payload in chars length
-#define RX 12                             //receive software serial port
-#define TX 13                             //send software serial port
+#define RX 13                             //receive software serial port
+#define TX 12                             //send software serial port
 #define ESC 11                            //ESC port
 #define BT_STATUS 10                      //Pin which the bluetooth connection status is shown on
 #define SERIAL_TYPE 1                     //define which serial port to use (0 = USB, 1 = bluetooth)
@@ -53,7 +53,11 @@ int command_percent = 0;                  //commanded percent from the controlle
 int command_speed = 0;                    //speed commanded by the controller
 int esc_speed = 0;                        //current speed sent to the ESC (after smoothing)
 
-void setup() {  
+//Function prototypes
+String serialRead();
+void serialWrite(String message);
+
+void setup() {
   //start USB serial and print message
   Serial.begin(9600);
   Serial.print("Skateboard Controller V");
@@ -79,12 +83,13 @@ void setup() {
 //OK LEEEROY LET'S DO THIS!
 void loop() {
   //get the latest info from the serial port
-  serial_buffer += readSerial();
+  serial_buffer = readSerial();
 
   //search the buffer for the command symbol (@)
   if(serial_buffer.indexOf('@') != -1) {
     //new command found! Get the index of the command start
     command_string = serial_buffer.substring(serial_buffer.indexOf('@'), serial_buffer.length());
+    writeSerial("Command detected!");
   }
 
   //depending on what the command was we need to do stuff now
@@ -99,7 +104,7 @@ void loop() {
   skateControl(esc_speed, command_speed, DAMPING);
 
   //read the sensors on board
-  readSensors();
+  //readSensors();
 
   //clear out the serial buffer
   serial_buffer = "";
@@ -107,22 +112,6 @@ void loop() {
 
   //delay a wee bit
   delay(50);
-}
-
-//read messages from the serials
-void readSerial() {
-  while(Serial.available()){
-    return Serial.readString();
-  }
-  while(blueSerial.available()) {
-    return blueSerial.readString();
-  }
-}
-
-//print a message to the serials
-void writeSerial(String message) {
-  Serial.println(message);
-  blueSerial.println(message);
 }
 
 //skateboard controller
@@ -155,7 +144,30 @@ void updateSpeed(String payload) {
   temp_message = "Updated speed to: ";
   temp_message += command_percent;
   
-  serialWrite(temp_message);
+  writeSerial(temp_message);
+}
+
+//read messages from the serials
+String readSerial() {
+  char inData[BUFFER_SIZE];
+  int index = 0;
+  
+  while(Serial.available()){
+    inData[index] = Serial.read();
+    index++;
+  }
+  while(blueSerial.available()) {
+    inData[index] = Serial.read();
+    index++;
+  }
+
+  return String(inData);
+}
+
+//print a message to the serials
+void writeSerial(String message) {
+  Serial.println(message);
+  blueSerial.println(message);
 }
 
 //function that reads each of the in board sensors
