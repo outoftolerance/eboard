@@ -2,7 +2,7 @@
  * Author: James Howard
  * Email: james@outoftolerance.com
  * Website: www.outoftolerance.com
- * Date: 2015-11-07
+ * Released under the MIT Licence
  */
 
 /*
@@ -54,16 +54,13 @@ int command_speed = 0;                    //speed commanded by the controller
 int esc_speed = 0;                        //current speed sent to the ESC (after smoothing)
 
 //Function prototypes
-String serialRead();
+String serialRead(void);
+void serialWriteLn(String message);
 void serialWrite(String message);
 
 void setup() {
-  //start USB serial and print message
-  Serial.begin(9600);
-  Serial.print("Skateboard Controller V");
-  Serial.println(VERSION);
-  
-  //start bluetooth serial and print message
+  //start serial and print message
+  Serial.begin(9600);  
   blueSerial.begin(9600);
   blueSerial.print("Skateboard Controller V");
   blueSerial.println(VERSION);
